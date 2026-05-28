@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFFFFF;
+    --ink: #1a1815;
+    --muted: #8a8680;
+    --rule: #dddad4;
+    --accent: #0B2351;
+    --wrong: #8b2020;
+    --right: #0B2351;
+    --warn: #7a5c1e;
+    --tag-bg: #F8F9FA;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  header h1 {
+    font-family: 'Roboto', sans-serif;
+    font-size: clamp(1.1rem, 4vw, 1.4rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  header p {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .legend span {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.72rem;
+    background: var(--tag-bg);
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  .entries {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .entry {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.15s;
+  }
+
+  .entry-name {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .options label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--tag-bg);
+    transition: border-color 0.12s, background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .options label:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  .options input[type="radio"] {
+    display: none;
+  }
+
+  /* Result states */
+  .entry.correct .entry-name::after {
+    content: ' +1';
+    font-size: 0.72rem;
+    color: var(--right);
+    font-weight: 400;
+  }
+  .entry.wrong .entry-name::after {
+    content: ' −1';
+    font-size: 0.72rem;
+    color: var(--wrong);
+    font-weight: 400;
+  }
+  .entry.skipped .entry-name::after {
+    content: ' —';
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .entry.correct .options label:has(input:checked) {
+    border-color: var(--right);
+    background: var(--right);
+    color: white;
+  }
+  .entry.wrong .options label:has(input:checked) {
+    border-color: var(--wrong);
+    background: var(--wrong);
+    color: white;
+  }
+  .entry.wrong .correct-hint {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.73rem;
+    color: var(--muted);
+    font-family: 'Roboto', sans-serif;
+  }
+  .correct-hint { display: none; }
+
+  .actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.7rem 1.4rem;
+    border: 1px solid var(--ink);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #submit-btn {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  #submit-btn:hover { background: var(--accent); border-color: var(--accent); }
+  #submit-btn:disabled { opacity: 0.4; cursor: default; }
+
+  #reset-btn {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--rule);
+    display: none;
+  }
+  #reset-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  #result {
+    display: none;
+    margin-top: 2rem;
+    padding: 1.25rem;
+    border: 1px solid var(--rule);
+    background: white;
+  }
+
+  #result .score-line {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  #result .score-line .pts {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-left: 0.2rem;
+  }
+
+  #result .breakdown {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  #result .breakdown span { white-space: nowrap; }
+
+  .entries.evaluated .options label { cursor: default; pointer-events: none; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ordne den Autor:innen die richtige Kategorie zu</h1>
+  
+</header>
+
+<div class="entries" id="entries"></div>
+
+<div class="actions">
+  <button id="submit-btn">Auswerten</button>
+  <button id="reset-btn">Neu starten</button>
+</div>
+
+<div id="result">
+  <div class="score-line" id="score-display"></div>
+  <div class="breakdown" id="breakdown"></div>
+</div>
+
+<script>
+const data = [
+  { name: "Anderle",         answer: "C" },
+  { name: "Baaz",            answer: "B" },
+  { name: "Benz",            answer: "C" },
+  { name: "Boeckh",          answer: "B" },
+  { name: "Bramke",          answer: "B" },
+  { name: "Coesfeld",        answer: "C" },
+  { name: "Fischer u.a.",    answer: "C" },
+  { name: "Galuscenco",      answer: "A" },
+  { name: "Hochgeschwender", answer: "C" },
+  { name: "Holzer",          answer: "B" },
+  { name: "Kaufmann",        answer: "B" },
+  { name: "Kossmann",        answer: "C" },
+  { name: "Kotkin",          answer: "B" },
+  { name: "Lendl",           answer: "C" },
+  { name: "McBride",         answer: "B" },
+  { name: "Pipes",           answer: "B" },
+  { name: "Piturca",         answer: "A" },
+  { name: "Traub",           answer: "C" },
+  { name: "Weber",           answer: "B" },
+];
+
+const labels = { A: "Zitierfähig", B: "Zitierfähig und -würdig", C: "Weder noch" };
+
+const container = document.getElementById('entries');
+const submitBtn = document.getElementById('submit-btn');
+const resetBtn  = document.getElementById('reset-btn');
+const result    = document.getElementById('result');
+const scoreDisplay = document.getElementById('score-display');
+const breakdown = document.getElementById('breakdown');
+
+function build() {
+  container.innerHTML = '';
+  data.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'entry';
+    div.dataset.index = i;
+
+    const name = document.createElement('div');
+    name.className = 'entry-name';
+    name.textContent = item.name;
+
+    const opts = document.createElement('div');
+    opts.className = 'options';
+
+    ['A', 'B', 'C'].forEach(opt => {
+      const label = document.createElement('label');
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `q${i}`;
+      radio.value = opt;
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(labels[opt]));
+      opts.appendChild(label);
+    });
+
+    const hint = document.createElement('span');
+    hint.className = 'correct-hint';
+    hint.id = `hint-${i}`;
+
+    div.appendChild(name);
+    div.appendChild(opts);
+    div.appendChild(hint);
+    container.appendChild(div);
+  });
+}
+
+submitBtn.addEventListener('click', () => {
+  let correct = 0, wrong = 0, skipped = 0;
+
+  container.classList.add('evaluated');
+
+  data.forEach((item, i) => {
+    const entry = container.querySelector(`[data-index="${i}"]`);
+    const selected = entry.querySelector(`input[value]:checked`);
+
+    if (!selected) {
+      entry.classList.add('skipped');
+      skipped++;
+    } else if (selected.value === item.answer) {
+      entry.classList.add('correct');
+      correct++;
+    } else {
+      entry.classList.add('wrong');
+      wrong++;
+      const hint = document.getElementById(`hint-${i}`);
+      hint.textContent = `Richtig: ${labels[item.answer]}`;
+    }
+  });
+
+  const total = correct - wrong;
+  const max   = data.length;
+
+  scoreDisplay.innerHTML = `${total < 0 ? '' : (total > 0 ? '+' : '')}${total}<span class="pts"> / ${max} Pkt.</span>`;
+  breakdown.innerHTML = `
+    <span>✓ ${correct} richtig</span>
+    <span>✗ ${wrong} falsch</span>
+    ${skipped ? `<span>— ${skipped} offen</span>` : ''}
+  `;
+
+  result.style.display = 'block';
+  submitBtn.disabled = true;
+  resetBtn.style.display = 'inline-block';
+
+  result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+resetBtn.addEventListener('click', () => {
+  container.classList.remove('evaluated');
+  result.style.display = 'none';
+  submitBtn.disabled = false;
+  resetBtn.style.display = 'none';
+  build();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+build();
+</script>
+</body>
+</html>
